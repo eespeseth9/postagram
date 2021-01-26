@@ -1,0 +1,50 @@
+// src/App.js
+import React, { useState, useEffect } from 'react';
+
+// import API from Amplify library
+import { API, Auth } from 'aws-amplify'
+
+// import query definition
+import { listPosts } from './graphql/queries'
+
+// src/App.js, import the withAuthenticator component
+//import { withAuthenticator } from '@aws-amplify/ui-react'
+import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
+
+function App() {
+  const [posts, setPosts] = useState([])
+  useEffect(() => {
+    fetchPosts();
+    checkUser(); //new function call
+  });
+  async function fetchPosts() {
+    try {
+      const postData = await API.graphql({ query: listPosts });
+      setPosts(postData.data.listPosts.items)
+    } catch (err) {
+      console.log({ err })
+    }
+  }
+  async function checkUser() {
+    const user = await Auth.currentAuthenticatedUser();
+    console.log('user: ', user);
+    console.log('user attributes: ', user.attributes);
+  }
+  return (
+    <div>
+      <h1>Hello World</h1>
+      <AmplifySignOut />
+      {
+        posts.map(post => (
+          <div key={post.id}>
+            <h3>{post.name}</h3>
+            <p>{post.location}</p>
+          </div>
+        ))
+      }
+    </div>
+  )
+}
+
+/* src/App.js, change the default export to this: */
+export default withAuthenticator(App)
